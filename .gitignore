@@ -1,1 +1,30 @@
-/.venv
+# Virtual Environment
+.venv/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local runtime logs & PIDs
+temp/
+logs/
+*.log
+pids.txt
+pids.json
+
+# Model artifacts (stored separately, generated during training)
+*.pkl
+*.joblib
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Environmental configurations
+.env
+.env.local
