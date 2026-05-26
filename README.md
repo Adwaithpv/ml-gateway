@@ -21,7 +21,7 @@ graph TD
 1. **ML Gateway Service**: Acts as the intelligent reverse proxy router. It evaluates the incoming request text length and user's latency budget to select the best model.
 2. **Small Model Service (Naive Bayes)**: Ultra-fast inference (~3ms) optimized for strict latency budgets (< 80ms) or short text (< 8 words).
 3. **Medium Model Service (Logistic Regression)**: Balanced speed/accuracy profile optimized for moderate latency budgets (< 180ms) or medium text length (< 25 words).
-4. **Large Model Service (LinearSVC)**: State-of-the-art classifier optimized for high-accuracy requirements when latency budget is generous.
+4. **Large Model Service**: higher-capacity calibrated LinearSVC classifier optimized for accuracy-focused requests.
 
 ### 📊 Model Performance & Characteristics
 

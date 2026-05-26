@@ -28,3 +28,9 @@ Thumbs.db
 # Environmental configurations
 .env
 .env.local
+
+# Testing & Coverage
+.coverage
+.pytest_cache/
+htmlcov/
+cov.xml
