@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: small-model
+  labels:
+    app: small-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: small-model
+  template:
+    metadata:
+      labels:
+        app: small-model
+    spec:
+      containers:
+        - name: small-model
+          image: ml-gateway/small:latest
+          ports:
+            - containerPort: 8001
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

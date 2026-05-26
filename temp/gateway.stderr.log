@@ -1,0 +1,10 @@
+INFO:     Started server process [54972]
+INFO:     Waiting for application startup.
+2026-05-26 20:19:10,071 | INFO     | gateway | Gateway started – routing to small=http://localhost:8001, medium=http://localhost:8002, large=http://localhost:8003
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-05-26 20:19:15,958 | INFO     | gateway | Routing request to small (http://localhost:8001/predict) – budget=100.0 ms, words=6
+2026-05-26 20:19:16,220 | INFO     | httpx | HTTP Request: POST http://localhost:8001/predict "HTTP/1.1 200 OK"
+2026-05-26 20:19:16,276 | INFO     | httpx | HTTP Request: GET http://localhost:8001/health "HTTP/1.1 200 OK"
+2026-05-26 20:19:16,541 | INFO     | httpx | HTTP Request: GET http://localhost:8002/health "HTTP/1.1 200 OK"
+2026-05-26 20:19:16,542 | INFO     | httpx | HTTP Request: GET http://localhost:8003/health "HTTP/1.1 200 OK"

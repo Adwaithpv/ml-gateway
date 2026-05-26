@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-gateway-config
+data:
+  SMALL_URL: "http://small-model-service:8001"
+  MEDIUM_URL: "http://medium-model-service:8002"
+  LARGE_URL: "http://large-model-service:8003"
+  FAST_THRESHOLD_MS: "80"
+  MEDIUM_THRESHOLD_MS: "180"

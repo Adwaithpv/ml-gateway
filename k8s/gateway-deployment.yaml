@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-gateway
+  labels:
+    app: ml-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-gateway
+  template:
+    metadata:
+      labels:
+        app: ml-gateway
+    spec:
+      containers:
+        - name: ml-gateway
+          image: ml-gateway/gateway:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: ml-gateway-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

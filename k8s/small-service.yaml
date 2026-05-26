@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: small-model-service
+spec:
+  type: ClusterIP
+  selector:
+    app: small-model
+  ports:
+    - port: 8001
+      targetPort: 8001

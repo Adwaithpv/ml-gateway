@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: large-model
+  labels:
+    app: large-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: large-model
+  template:
+    metadata:
+      labels:
+        app: large-model
+    spec:
+      containers:
+        - name: large-model
+          image: ml-gateway/large:latest
+          ports:
+            - containerPort: 8003
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
