@@ -1,4 +1,4 @@
-# 🧠 ML Gateway Service (Kubernetes & Minikube Deployment Guide)
+# 🧠 ML Gateway Service
 
 This repository hosts a **production-style MLOps prototype** that demonstrates latency-aware model selection, containerized FastAPI inference services, Kubernetes deployment, and retraining workflow simulation. The system is designed to intelligently route text classification (spam detection) requests to specialized downstream model services based on **latency budgets** and **text complexity**.
 
