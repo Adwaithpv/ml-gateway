@@ -1,6 +1,6 @@
 # 🧠 ML Gateway Service (Kubernetes & Minikube Deployment Guide)
 
-Welcome to the **ML Gateway Service**! This repository hosts a production-grade, highly optimized microservices system designed to intelligently route text classification (spam detection) requests to specialized downstream model services based on **latency budgets** and **text complexity**.
+This repository hosts a **production-style MLOps prototype** that demonstrates latency-aware model selection, containerized FastAPI inference services, Kubernetes deployment, and retraining workflow simulation. The system is designed to intelligently route text classification (spam detection) requests to specialized downstream model services based on **latency budgets** and **text complexity**.
 
 This repository is fully configured for native **Windows PowerShell** orchestration using the custom build wrapper `run.ps1`, which interfaces seamlessly with **Minikube** (using its built-in `kubectl` framework) and local Python environments.
 
@@ -22,6 +22,14 @@ graph TD
 2. **Small Model Service (Naive Bayes)**: Ultra-fast inference (~3ms) optimized for strict latency budgets (< 80ms) or short text (< 8 words).
 3. **Medium Model Service (Logistic Regression)**: Balanced speed/accuracy profile optimized for moderate latency budgets (< 180ms) or medium text length (< 25 words).
 4. **Large Model Service (LinearSVC)**: State-of-the-art classifier optimized for high-accuracy requirements when latency budget is generous.
+
+### 📊 Model Performance & Characteristics
+
+| Model | Algorithm | Avg Latency | Accuracy | Use Case |
+|---|---|---:|---:|---|
+| **Small** | Naive Bayes | ~3 ms | 98.39% | strict latency or short text |
+| **Medium** | Logistic Regression | ~5 ms | 96.77% | balanced speed / accuracy |
+| **Large** | LinearSVC (Calibrated) | ~15 ms | 98.03% | higher accuracy with generous budget |
 
 ---
 
@@ -98,6 +106,22 @@ The script will automatically detect that port `30080` (Kubernetes NodePort) is 
     "gateway_latency_ms": 12.45
 }
 ```
+
+---
+
+## 🔄 Model Retraining Workflow
+
+This prototype simulates production-style MLOps model lifecycle management via Kubernetes batch Jobs:
+
+```powershell
+# Trigger a retraining Job in Kubernetes
+.\run.ps1 retrain
+```
+
+### How it Works Under the Hood:
+1. **Containerized Job Execution**: Applying `k8s/retrain-job.yaml` launches a batch Job executing `train.py` inside the model container image (`ml-gateway/small:v1`).
+2. **Dataset & Training**: The training execution compiles features using `data/spam.csv` (which is baked into the model image context) and fits the pipeline.
+3. **Simulation Note**: In this local cluster setup, the retrained `model.pkl` is saved within the transient batch container's writable layer. In a full production MLOps pipeline, this Job would push the updated model artifact to a central object store (like S3/GCS) or model registry (like MLflow) and trigger a rolling rollout (`kubectl rollout restart`) to redeploy the serving pods with the new weights.
 
 ---
 

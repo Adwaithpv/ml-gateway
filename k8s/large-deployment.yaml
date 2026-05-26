@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: large-model
-          image: ml-gateway/large:latest
+          image: ml-gateway/large:v1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8003
           readinessProbe:

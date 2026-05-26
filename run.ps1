@@ -119,17 +119,39 @@ function Run-Train {
 function Run-Build {
     Show-Banner "Target: build" "Yellow"
     
-    Write-Host "Building services/small..." -ForegroundColor Cyan
-    docker build -t ml-gateway/small:latest services/small/
+    # Check if spam.csv exists
+    $dataDir = Join-Path $PSScriptRoot "data"
+    $csvPath = Join-Path $dataDir "spam.csv"
+    if (-not (Test-Path $csvPath)) {
+        Write-Error "Dataset not found at $csvPath. Run '.\run.ps1 train' first."
+        return
+    }
+
+    # Temporarily copy dataset to build contexts
+    Write-Host "Staging dataset to service build contexts..." -ForegroundColor Gray
+    Copy-Item $csvPath "services/small/spam.csv" -Force
+    Copy-Item $csvPath "services/medium/spam.csv" -Force
+    Copy-Item $csvPath "services/large/spam.csv" -Force
     
-    Write-Host "Building services/medium..." -ForegroundColor Cyan
-    docker build -t ml-gateway/medium:latest services/medium/
-    
-    Write-Host "Building services/large..." -ForegroundColor Cyan
-    docker build -t ml-gateway/large:latest services/large/
-    
-    Write-Host "Building gateway..." -ForegroundColor Cyan
-    docker build -t ml-gateway/gateway:latest gateway/
+    try {
+        Write-Host "Building services/small..." -ForegroundColor Cyan
+        docker build -t ml-gateway/small:v1 services/small/
+        
+        Write-Host "Building services/medium..." -ForegroundColor Cyan
+        docker build -t ml-gateway/medium:v1 services/medium/
+        
+        Write-Host "Building services/large..." -ForegroundColor Cyan
+        docker build -t ml-gateway/large:v1 services/large/
+        
+        Write-Host "Building gateway..." -ForegroundColor Cyan
+        docker build -t ml-gateway/gateway:v1 gateway/
+    } finally {
+        # Clean up temporary dataset copies
+        Write-Host "Cleaning up service build contexts..." -ForegroundColor Gray
+        Remove-Item "services/small/spam.csv" -Force -ErrorAction SilentlyContinue | Out-Null
+        Remove-Item "services/medium/spam.csv" -Force -ErrorAction SilentlyContinue | Out-Null
+        Remove-Item "services/large/spam.csv" -Force -ErrorAction SilentlyContinue | Out-Null
+    }
     
     Write-Host "`nAll Docker images built successfully!" -ForegroundColor Green
 }
@@ -150,6 +172,16 @@ function Run-Deploy {
 function Run-Test {
     Show-Banner "Target: test" "Yellow"
     
+    # 1. Run gateway unit tests
+    Write-Host "Running gateway unit tests..." -ForegroundColor Cyan
+    $python = Get-PythonPath
+    & $python -m unittest tests/test_gateway.py
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Gateway unit tests failed! Aborting dynamic endpoint testing."
+        return
+    }
+    Write-Host "Gateway unit tests passed successfully!`n" -ForegroundColor Green
+    
     # Dynamic port detection (prefer 8000 if active, otherwise fallback to 30080)
     $port = 8000
     $tcp = New-Object System.Net.Sockets.TcpClient
@@ -166,8 +198,8 @@ function Run-Test {
         Run-Local
         $localStarted = $true
         
-        Write-Host "Waiting 5 seconds for services to boot up..." -ForegroundColor Gray
-        Start-Sleep -Seconds 5
+        Write-Host "Waiting 10 seconds for services to boot up..." -ForegroundColor Gray
+        Start-Sleep -Seconds 10
         
         # Double check if port 8000 is now active
         try {
@@ -325,6 +357,9 @@ function Run-Setup {
         Write-Host "Installing dependencies using $pip with custom cache/temp directories..." -ForegroundColor Cyan
         & $pip install --cache-dir $cacheDir -r services/small/requirements.txt
         & $pip install --cache-dir $cacheDir -r gateway/requirements.txt
+        
+        Write-Host "Pre-compiling virtual environment Python bytecode to prevent concurrency conflicts..." -ForegroundColor Cyan
+        & $python -m compileall -q (Join-Path $PSScriptRoot ".venv")
     } finally {
         # Restore environment variables
         $env:TEMP = $oldTemp
@@ -398,9 +433,10 @@ function Run-Local {
         $stdoutFile = Join-Path $tempDir "$($srv.Name).stdout.log"
         $stderrFile = Join-Path $tempDir "$($srv.Name).stderr.log"
         $scriptPath = Join-Path $PSScriptRoot $srv.Path
-        # Start python process in background, redirecting output to separate log files with explicit WorkingDirectory
-        $proc = Start-Process -FilePath $python -ArgumentList $scriptPath -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
+        # Start python process in background with -O optimization, redirecting output to separate log files with explicit WorkingDirectory
+        $proc = Start-Process -FilePath $python -ArgumentList @("-O", $scriptPath) -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdoutFile -RedirectStandardError $stderrFile
         Add-ProcessToTracker $srv.Name $proc.Id
+        Start-Sleep -Seconds 2 # Stagger process start to prevent CPU/RAM race conditions and file collisions!
     }
     
     # 3. Start Gateway service
@@ -409,7 +445,7 @@ function Run-Local {
     $gwStderrFile = Join-Path $tempDir "gateway.stderr.log"
     Push-Location "$PSScriptRoot/gateway"
     try {
-        $gwProc = Start-Process -FilePath $python -ArgumentList "-m uvicorn app:app --host 0.0.0.0 --port 8000" -WorkingDirectory "$PSScriptRoot/gateway" -WindowStyle Hidden -PassThru -RedirectStandardOutput $gwStdoutFile -RedirectStandardError $gwStderrFile
+        $gwProc = Start-Process -FilePath $python -ArgumentList @("-O", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000") -WorkingDirectory "$PSScriptRoot/gateway" -WindowStyle Hidden -PassThru -RedirectStandardOutput $gwStdoutFile -RedirectStandardError $gwStderrFile
         Add-ProcessToTracker "gateway" $gwProc.Id
     } finally {
         Pop-Location

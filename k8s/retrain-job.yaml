@@ -8,6 +8,7 @@ spec:
     spec:
       containers:
         - name: retrain-small
-          image: ml-gateway/small:latest
+          image: ml-gateway/small:v1
+          imagePullPolicy: IfNotPresent
           command: ["python", "train.py"]
       restartPolicy: Never

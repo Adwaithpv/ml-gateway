@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: ml-gateway
-          image: ml-gateway/gateway:latest
+          image: ml-gateway/gateway:v1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:

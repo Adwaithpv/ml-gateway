@@ -38,6 +38,12 @@ MODEL_ENDPOINTS: dict[str, str] = {
 
 SERVICE_TIMEOUT_SECONDS: float = float(os.getenv("SERVICE_TIMEOUT_SECONDS", "30"))
 
+# Dynamic Routing Thresholds from Environment/ConfigMap
+FAST_THRESHOLD_MS: float = float(os.getenv("FAST_THRESHOLD_MS", "80"))
+MEDIUM_THRESHOLD_MS: float = float(os.getenv("MEDIUM_THRESHOLD_MS", "180"))
+SMALL_WORD_THRESHOLD: int = int(os.getenv("SMALL_WORD_THRESHOLD", "8"))
+MEDIUM_WORD_THRESHOLD: int = int(os.getenv("MEDIUM_WORD_THRESHOLD", "25"))
+
 # ---------------------------------------------------------------------------
 # Pydantic schemas
 # ---------------------------------------------------------------------------
@@ -126,17 +132,13 @@ def _get_client() -> httpx.AsyncClient:
 
 def select_model(text: str, latency_budget_ms: float) -> str:
     """
-    Decide which model service should handle the request.
-
-    Rules:
-        1. small  – if latency_budget_ms < 80  OR word_count < 8
-        2. medium – if latency_budget_ms < 180 OR word_count < 25
-        3. large  – otherwise
+    Decide which model service should handle the request dynamically
+    based on latency budget and text complexity thresholds.
     """
     word_count = len(text.split())
-    if latency_budget_ms < 80 or word_count < 8:
+    if latency_budget_ms < FAST_THRESHOLD_MS or word_count < SMALL_WORD_THRESHOLD:
         return "small"
-    if latency_budget_ms < 180 or word_count < 25:
+    if latency_budget_ms < MEDIUM_THRESHOLD_MS or word_count < MEDIUM_WORD_THRESHOLD:
         return "medium"
     return "large"
 

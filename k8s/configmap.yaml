@@ -8,3 +8,5 @@ data:
   LARGE_URL: "http://large-model-service:8003"
   FAST_THRESHOLD_MS: "80"
   MEDIUM_THRESHOLD_MS: "180"
+  SMALL_WORD_THRESHOLD: "8"
+  MEDIUM_WORD_THRESHOLD: "25"

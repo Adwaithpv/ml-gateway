@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: small-model
-          image: ml-gateway/small:latest
+          image: ml-gateway/small:v1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8001
           readinessProbe:

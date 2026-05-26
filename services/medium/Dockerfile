@@ -10,9 +10,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code and trained model
+# Copy application code, training script, and trained model
 COPY app.py .
+COPY train.py .
 COPY model.pkl .
+
+# Copy training dataset (placed in context during build)
+COPY spam.csv /data/spam.csv
 
 EXPOSE 8002
 

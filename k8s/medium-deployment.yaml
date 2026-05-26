@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: medium-model
-          image: ml-gateway/medium:latest
+          image: ml-gateway/medium:v1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8002
           readinessProbe:
